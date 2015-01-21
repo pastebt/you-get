@@ -112,8 +112,19 @@ def constructKey(arg):
     return str2hex(res)
 
 
+def query_info(url):
+    headers = {#'User-Agent': USER_AGENT,
+               'Referer': 'http://ccf.pptv.com/0',
+              }
+    req = urllib.request.Request(url, None, headers)
+    opn = urllib.request.build_opener(urllib.request.ProxyHandler({'http': 'proxy.uku.im:8888'}))
+    return opn.open(req).read().decode('utf8')
+
+# curl -x proxy.uku.im:8888  'http://web-play.pptv.com/webplay3-0-12347078.xml?type=web.fpp'
 def pptv_download_by_id(id, title = None, output_dir = '.', merge = True, info_only = False):
-    xml = get_html('http://web-play.pptv.com/webplay3-0-%s.xml?type=web.fpp' % id)
+    #xml = get_html('http://web-play.pptv.com/webplay3-0-%s.xml?type=web.fpp' % id)
+    xml = query_info('http://web-play.pptv.com/webplay3-0-%s.xml?type=web.fpp' % id)
+    print(xml)
     #vt=3 means vod mode vt=5 means live mode
     host = r1(r'<sh>([^<>]+)</sh>', xml)
     k = r1(r'<key expire=[^<>]+>([^<>]+)</key>', xml)
@@ -147,6 +158,7 @@ def pptv_download(url, output_dir = '.', merge = True, info_only = False):
     html = get_html(url)
     id = r1(r'webcfg\s*=\s*{"id":\s*(\d+)', html)
     assert id
+    print(id)
     pptv_download_by_id(id, output_dir = output_dir, merge = merge, info_only = info_only)
 
 site_info = "PPTV.com"
