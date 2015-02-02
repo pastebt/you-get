@@ -6,7 +6,7 @@ import urllib.request
 USER_AGENT="Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36"
 
 def query_info(url):
-    headers = {'User-Agent': USER_AGENT,
+    headers = {#'User-Agent': USER_AGENT,
 
                #"X-Forwarded-For": "220.181.111.171",
                #"Client-IP": "220.181.111.171",
