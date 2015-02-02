@@ -99,6 +99,9 @@ def bilibili_download_by_cids(cids, title, output_dir='.', merge=True, info_only
 def bilibili_download_by_cid(id, title, output_dir='.', merge=True, info_only=False):
     sign_this = hashlib.md5(bytes('appkey=' + appkey + '&cid=' + id + secretkey, 'utf-8')).hexdigest()
     url = 'http://interface.bilibili.com/playurl?appkey=' + appkey + '&cid=' + id + '&sign=' + sign_this
+    print(url)
+    #url = "http://interface.bilibili.com/playurl?accel=1&cid=1905810&player=1&ts=1422843177&sign=aa690f529ef94ac33e7de956d64aea91"
+    #print(url)
     urls = [i
             if not re.match(r'.*\.qqvideo\.tc\.qq\.com', i)
             else re.sub(r'.*\.qqvideo\.tc\.qq\.com', 'http://vsrc.store.qq.com', i)
@@ -124,7 +127,6 @@ def bilibili_download_by_cid(id, title, output_dir='.', merge=True, info_only=Fa
 
 def bilibili_download(url, output_dir='.', merge=True, info_only=False):
     html = get_html(url)
-    print(html)
     title = r1_of([r'<meta name="title" content="([^<>]{1,999})" />',r'<h2[^>]*>([^<>]+)</h2>'], html)
     title = unescape_html(title)
     title = escape_file_path(title)
@@ -134,10 +136,12 @@ def bilibili_download(url, output_dir='.', merge=True, info_only=False):
     flashvars = flashvars.replace(': ','=')
     t, id = flashvars.split('=', 1)
     id = id.split('&')[0]
+    print("t = " + t + ", id =" + id)
     if t == 'cid':
         # Multi-P
         cids = [id]
         p = re.findall('<option value=\'([^\']*)\'>', html)
+        p = []
         if not p:
             bilibili_download_by_cid(id, title, output_dir=output_dir, merge=merge, info_only=info_only)
         else:
