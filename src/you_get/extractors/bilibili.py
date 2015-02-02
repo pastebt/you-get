@@ -15,11 +15,12 @@ import re
 appkey='85eb6835b0a1034e';
 secretkey = '2ad42749773c441109bdc0191257a664'
 client = {
+    'User-Agent': "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36",
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Charset': 'UTF-8,*;q=0.5',
     'Accept-Encoding': 'gzip,deflate,sdch',
     'Accept-Language': 'en-US,en;q=0.8',
-    'User-Agent': 'Biligrab /0.8 (cnbeining@gmail.com)'
+    #'User-Agent': 'Biligrab /0.8 (cnbeining@gmail.com)'
 }
 
 def get_srt_xml(id):
@@ -89,7 +90,7 @@ def bilibili_download_by_cids(cids, title, output_dir='.', merge=True, info_only
 
     size = 0
     for url in urls:
-        _, _, temp = url_info(url)
+        _, _, temp = url_info(url, True)
         size += temp
 
     print_info(site_info, title, type, size)
@@ -118,7 +119,7 @@ def bilibili_download_by_cid(id, title, output_dir='.', merge=True, info_only=Fa
 
     size = 0
     for url in urls:
-        _, _, temp = url_info(url)
+        _, _, temp = url_info(url, True)
         size += temp or 0
 
     print_info(site_info, title, type, size)
