@@ -20,12 +20,14 @@ def sohu_download(url, output_dir = '.', merge = True, info_only = False):
     assert vid
 
     if re.match(r'http://tv.sohu.com/', url):
+        #set_proxy(("211.155.86.25", "8888"))
         data = json.loads(get_decoded_html('http://hot.vrs.sohu.com/vrs_flash.action?vid=%s' % vid))
         for qtyp in ["oriVid","superVid","highVid" ,"norVid","relativeId"]:
             hqvid = data['data'][qtyp]
             if hqvid != 0 and hqvid != vid :
                 data = json.loads(get_decoded_html('http://hot.vrs.sohu.com/vrs_flash.action?vid=%s' % hqvid))
                 break
+        #unset_proxy()
         host = data['allot']
         prot = data['prot']
         urls = []

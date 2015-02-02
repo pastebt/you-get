@@ -90,11 +90,15 @@ def letvcloud_download(url, output_dir='.', merge=True, info_only=False):
     title = "LETV-%s" % vu
     letvcloud_download_by_vu(vu, title=title, output_dir=output_dir, merge=merge, info_only=info_only)
 
-def letv_download(url, output_dir='.', merge=True, info_only=False):
+def letv_download(url, output_dir='.', merge=True, info_only=False, extractor_proxy=None):
     if re.match(r'http://yuntv.letv.com/', url):
         letvcloud_download(url, output_dir=output_dir, merge=merge, info_only=info_only)
     else:
+        if extractor_proxy:
+            set_proxy(parse_host(extractor_proxy))
         html = get_content(url)
+        #if extractor_proxy:
+        #    unset_proxy()
         #to get title
         if re.match(r'http://www.letv.com/ptv/vplay/(\d+).html', url):
             vid = match1(url, r'http://www.letv.com/ptv/vplay/(\d+).html')
