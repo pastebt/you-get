@@ -9,7 +9,8 @@ http://www.bilibili.com/video/av1251587/    fixed
 http://www.bilibili.com/video/av1951329/
 http://www.bilibili.com/video/av1952055/
 
-http://www.letv.com/ptv/vplay/1744455.html  0.27 MiB (279110 Bytes)
+
+http://www.letv.com/ptv/vplay/1744455.html  0.27 MiB (279110 Bytes)  bug #419
 
 http://tv.sohu.com/20140629/n401523369.shtml?txid=8254069965286abe9ee523a73c256ea7  # need proxy bug #353
 "211.155.86.25:8888"
