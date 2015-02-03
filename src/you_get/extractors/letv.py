@@ -9,10 +9,19 @@ import base64, hashlib, urllib
 
 from ..common import *
 
+client = {
+    'User-Agent': "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36",
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Charset': 'UTF-8,*;q=0.5',
+    'Accept-Encoding': 'gzip,deflate,sdch',
+    'Accept-Language': 'en-US,en;q=0.8',
+    #'User-Agent': 'Biligrab /0.8 (cnbeining@gmail.com)'
+}
+
 def get_timestamp():
     tn = random.random()
     url = 'http://api.letv.com/time?tn={}'.format(tn)
-    result = get_content(url)
+    result = get_content(url, client)
     return json.loads(result)['stime']
 
 def get_key(t):
@@ -42,7 +51,7 @@ def video_info(vid):
     # return url, title
 
     url="http://api.letv.com/mms/out/common/geturl?platid=3&splatid=301&playid=0&vtype=9,13,21,28&version=2.0&tss=no&vid={}&domain=www.letv.com&tkey={}".format(vid,key)
-    r = get_content(url, decoded=False)
+    r = get_content(url, client, decoded=False)
     info=json.loads(str(r,"utf-8"))
     size=0
     for i in info["data"][0]["infos"]: #0 means only one file not truncated.need to upgrade
@@ -52,13 +61,13 @@ def video_info(vid):
 
     url+="&ctv=pc&m3v=1&termid=1&format=1&hwtype=un&ostype=Linux&tag=letv&sign=letv&expect=3&tn={}&pay=0&iscpn=f9051&rateid=1300".format(random.random())
     # url += '&termid=1&format=0&hwtype=un&ostype=Windows7&tag=letv&sign=letv&expect=1&pay=0&rateid=1000'   #{}'.format(k)
-    r2=get_content(url,decoded=False)
+    r2=get_content(url, client, decoded=False)
     info2=json.loads(str(r2,"utf-8"))
     return info2["location"]
 
 def letv_download_by_vid(vid,title, output_dir='.', merge=True, info_only=False):
     url= video_info(vid)
-    _, _, size = url_info(url)
+    _, _, size = url_info(url, True)
     ext = 'flv'
     print_info(site_info, title, ext, size)
     if not info_only:
@@ -96,7 +105,8 @@ def letv_download(url, output_dir='.', merge=True, info_only=False, extractor_pr
     else:
         if extractor_proxy:
             set_proxy(parse_host(extractor_proxy))
-        html = get_content(url)
+        html = get_content(url, client)
+        print(html)
         #if extractor_proxy:
         #    unset_proxy()
         #to get title
