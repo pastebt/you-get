@@ -22,3 +22,5 @@ http://tv.sohu.com/20141209/n406787992.shtml    #  bug #456 need proxy, need mor
 
 https://github.com/soimort/you-get/issues/390
 https://github.com/soimort/you-get/issues/331
+
+http://www.bilibili.com/video/av1955109/
