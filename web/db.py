@@ -7,23 +7,44 @@ import sqlite3
 dbfile = "url_info.db"
 
 
-def init_db():
-    global dbfile
+class SDB(object):
+    def __enter__(self):
+        global dbfile
+        self.conn = sqlite3.connect(dbfile)
+        self.cur = self.conn.cursor()
+        return self.cur
 
-    conn = sqlite3.connect(dbfile)
-    c = conn.cursor()
-    c.execute('''
-        create table if not exists stocks (
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.conn.commit()
+        self.cur.close()
+        self.conn.close()
+
+
+def init_db():
+    with SDB() as c:
+        c.execute('''
+        create table if not exists aviurl (
             url text,
             title text,
             size int,
+            `when` datetime,
             prog real,
             done bool,
             wait bool
         )''')
-    conn.commit()
-    c.close()
-    conn.close()
+
+
+def add_one_url(url, title=""):
+    with SDB() as c:
+        c.execute("insert into aviurl (url, title) values (?, ?)",
+                  (url, title))
+
+
+def dump_urls():
+    with SDB() as c:
+        urls = c.execute("select * from aviurl")
+        for url in urls:
+            print(url)
 
 
 def usage():
@@ -38,7 +59,8 @@ def main():
         usage()
 
     if sys.argv[1] == '-l':
-        list_all()
+        #list_all()
+        dump_urls()
     else:
         usage()
 
