@@ -40,11 +40,18 @@ def add_one_url(url, title=""):
                   (url, title))
 
 
-def dump_urls():
+def query_urls():
     with SDB() as c:
         urls = c.execute("select * from aviurl")
-        for url in urls:
-            print(url)
+        desc = [x[0] for x in c.description]
+        # have to finish this in "with" scope
+        ret = [dict(zip(desc, url)) for url in urls]
+    return ret
+
+
+def dump_urls():
+    for url in query_urls():
+        print(url)
 
 
 def usage():
@@ -59,7 +66,6 @@ def main():
         usage()
 
     if sys.argv[1] == '-l':
-        #list_all()
         dump_urls()
     else:
         usage()
