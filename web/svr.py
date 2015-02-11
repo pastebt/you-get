@@ -38,6 +38,7 @@ def html_form():
 
 def html_list():
     return template("""
+        %if urls:
         <table border=1>
         <thead><tr>
             <td>Title</td>
@@ -62,6 +63,7 @@ def html_list():
         %end
         </tbody>
         </table>
+        %end
         """, urls=query_urls())
 
 
