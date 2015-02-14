@@ -47,7 +47,7 @@ def add_one_url(url, title=""):
 
 def query_urls():
     with SDB() as c:
-        urls = c.execute("select * from aviurl")
+        urls = c.execute("select rowid, * from aviurl")
         desc = [x[0] for x in c.description]
         # have to finish this in "with" scope
         ret = [dict(zip(desc, url)) for url in urls]
