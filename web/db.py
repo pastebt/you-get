@@ -38,6 +38,15 @@ def init_db():
         )''')
 
 
+class UOBJ(object):
+    def __init__(self, dats=[]):
+        for dat in dats:
+            setattr(self, dat[0], dat[1])
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 def add_one_url(url, title=""):
     with SDB() as c:
         c.execute("insert into aviurl (url, name, updt) "
@@ -50,13 +59,14 @@ def query_urls():
         urls = c.execute("select rowid, * from aviurl")
         desc = [x[0] for x in c.description]
         # have to finish this in "with" scope
-        ret = [dict(zip(desc, url)) for url in urls]
+        #ret = [dict(zip(desc, url)) for url in urls]
+        ret = [UOBJ(zip(desc, url)) for url in urls]
     return ret
 
 
 def dump_urls():
-    for url in query_urls():
-        print(url)
+    for uobj in query_urls():
+        print(uobj)
 
 
 def usage():

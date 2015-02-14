@@ -49,11 +49,11 @@ def html_list():
         <tbody>
         %for url in urls:
             <tr>
-                <td>{{url['name']}}</td>
-                <td>{{url['updt']}}</td>
-                <td>{{url['url']}}</td>
+                <td>{{url.name}}</td>
+                <td>{{url.updt}}</td>
+                <td>{{url.url}}</td>
                 <td>\\\\
-                    %if url['flag'] is None:
+                    %if url.flag is None:
 """                  """NA\\\\
                     %else:
 """                  """FF\\\\
