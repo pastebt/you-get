@@ -24,17 +24,17 @@ def init_db():
     with SDB() as c:
         c.execute('''
         create table if not exists aviurl (
-            url text,               -- movie url
-            name text,              -- movie name
-            mime text,              -- mime from remote
-            size bigint,            -- movie file size
-            path text,              -- movie local file path
-            updt datetime,          -- when the url be submitted
-            bgdt datetime,          -- when the url start download
-            eddt datetime,          -- when the url finished download
-            prog real,              -- progress, xx.x%
-            prio tinyint,           -- downlaod priority
-            flag tinyint            -- status, WAIT, WORKING, DONE
+            url text,           -- movie url
+            name text,          -- movie name
+            mime text,          -- mime from remote
+            size bigint,        -- movie file size
+            path text,          -- movie local file path
+            updt datetime,      -- when the url be submitted
+            bgdt datetime,      -- when the url start download
+            eddt datetime,      -- when the url finished download
+            prog real,          -- progress, xx.x%
+            prio tinyint,       -- downlaod priority
+            flag tinyint        -- status, WAIT, WORKING, DONE
         )''')
 
 
