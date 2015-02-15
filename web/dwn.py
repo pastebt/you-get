@@ -16,13 +16,13 @@ sys.path.insert(1, os.path.join(_filepath, _srcdir))
 
 
 from you_get.common import any_download, download_main
-
 from db import pick_url
 
+
 def work():
-    url="http://www.dailymotion.com/video/k65xg3tOFvWf7a9CtyR"
-    url="http://www.dailymotion.com/video/k24yMzJwTk5oW29DIrD"
-    url="http://www.dailymotion.com/video/koWwt2hrjlB7S89Io00"
+    url = "http://www.dailymotion.com/video/k65xg3tOFvWf7a9CtyR"
+    url = "http://www.dailymotion.com/video/k24yMzJwTk5oW29DIrD"
+    url = "http://www.dailymotion.com/video/koWwt2hrjlB7S89Io00"
     #download_main(any_download, None, [url], None,
     #          output_dir="/home/maye/workspace/github/you-get/")
 

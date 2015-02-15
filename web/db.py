@@ -5,10 +5,10 @@ import sqlite3
 
 
 dbfile = "url_info.db"
-WAIT=10
-WORK=20
-FAIL=30
-DONE=50
+WAIT = 10
+WORK = 20
+FAIL = 30
+DONE = 50
 
 
 class SDB(object):
@@ -75,7 +75,7 @@ def set_flag(mid, act):
     with SDB() as c:
         c.execute("update aviurl set flag=? where rowid=?",
                   (fm[act], mid))
-        
+
 
 def dump_urls():
     for uobj in query_urls():
