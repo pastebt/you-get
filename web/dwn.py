@@ -2,7 +2,7 @@
 
 import os
 import sys
-from multiprocess import Pipe, Queue, Process
+from multiprocessing import Pipe, Queue, Process
 
 _srcdir = '../src/'
 if getattr(sys, 'frozen', False):
@@ -19,6 +19,17 @@ from you_get.common import any_download, download_main
 from db import pick_url
 
 
+class WFP(object):
+    def __init__(self, p):
+        self.p = p
+
+    def write(self, dat):
+        self.p.send(dat)
+
+    def flush(self):
+        pass
+
+
 def work(uobj):
     #url = "http://www.dailymotion.com/video/k65xg3tOFvWf7a9CtyR"
     #url = "http://www.dailymotion.com/video/k24yMzJwTk5oW29DIrD"
@@ -32,25 +43,43 @@ class Worker(Process):
         Process.__init__(self)
         self.que = que
         self.reader, self.sender = Pipe(False)
-        #self.proc = Process(target=self.run, args=[que, sender])
 
     def run(self):
-        while self.que.get():
-            uobj = pick_url()
+        sys.stdout = WFP(self.sender)
+        while True:
+            mid = self.que.get()
+            if mid is None:
+                break
+            uobj = pick_url(mid)
+            self.sender.send("Process mid=%d Start" % uobj.rowid)
             work(uobj)
+            self.sender.send("Process mid=%d Stop" % uobj.rowid)
 
 
 class Manager(Process):
-    def __init__(self, que, wnum=1):
+    def __init__(self, wnum=1):
         Process.__init__(self)
-        self.works = [0] * wnum
-        self.que = que
-        self.running = True
-        for i in range(wnum):
-            self.works[i] = Worker(self.que)
-            self.works[i].start()
+        self.m2w = self.s2m = Queue()
+        self.wnum = wnum
 
+        self.works = [0] * self.wnum
+        for i in range(self.wnum):
+            self.works[i] = Worker(self.m2w)
+        self.works[0].start()
+
+    """
+Video Site: bilibili.com
+Title:      【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字幕】
+Type:       Flash video (video/x-flv)
+Size:       3410.85 MiB (3576536465 Bytes)
+
+Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字幕】.flv ...
+  0.7% ( 22.2/3410.9MB) [#
+    """
     def run(self):
-        while self.running:
+        while True:
             #select(self.works.reader.fileno)
-            dat = self.works[0].reader.read()
+            dat = self.works[0].reader.recv()
+            print("[" + dat + "]")
+            if dat.startswith("Downloading ") or dat.startswith("Process "):
+                print(dat)

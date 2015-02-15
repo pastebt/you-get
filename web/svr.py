@@ -5,6 +5,7 @@ from bottle import run, template, route, redirect
 from bottle import static_file
 
 from db import init_db, add_one_url, query_urls, set_flag
+from dwn import Manager
 
 
 def html_head():
@@ -40,7 +41,7 @@ def html_form():
 
 def html_list():
     return template("""
-        <% from db import WAIT, WORK, FAIL, DONE %>
+        <% from db import STOP, WAIT, WORK, FAIL, DONE %>
         %if urls:
         <table border=1>
         <thead><tr>
@@ -61,7 +62,7 @@ def html_list():
                     %elif url.flag == WAIT:
 """                  """waiting\\\\
                     %elif url.flag == WORK:
-"""                  """working\\\\
+"""                  """<a href=/rest?mid={{url.rowid}}&act=start>working</a>\\\\
                     %elif url.flag == FAIL:
 """                  """<a href=/rest?mid={{url.rowid}}&act=start>retry</a>\\\\
                     %elif url.flag == DONE:
@@ -94,6 +95,7 @@ def rest():
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
         set_flag(mid, act)
+        mon.s2m.put(mid)
     redirect("/")
 
 
@@ -118,5 +120,9 @@ def do_post():
 
 
 init_db()
+mon = Manager()
+mon.start()
+#mon.s2m.put(1)   start 
 #run(host='localhost', port=8080)
 run(host='', port=8080)
+mon.s2m.put(None)

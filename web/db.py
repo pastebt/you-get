@@ -69,13 +69,17 @@ def query_urls():
     return ret
 
 
-def pick_url():
+def pick_url(mid=0):
     with SDB() as c:
-        dats = c.execute("select rowid, * from aviurl where flag=? limit 1",
-                         (WAIT,))
+        if mid:
+            urls = c.execute("select rowid, * from aviurl where rowid=?",
+                             (mid,))
+        else:
+            urls = c.execute("select rowid, * from aviurl where flag=? limit 1",
+                             (WAIT,))
         desc = [x[0] for x in c.description]
-        uobj = UOBJ(zip(desc, dats[0]) if dats else None
-    return uobj
+        ret = [UOBJ(zip(desc, url)) for url in urls]
+    return ret[0] if ret else None
 
 
 def set_flag(mid, act):
