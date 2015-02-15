@@ -1,8 +1,10 @@
 #! /usr/bin/python3
 
-from bottle import get, post, run, request, template
+from bottle import get, post, request
+from bottle import run, template, route, redirect
+from bottle import static_file
 
-from db import init_db, add_one_url, query_urls
+from db import init_db, add_one_url, query_urls, set_flag
 
 
 def html_head():
@@ -38,6 +40,7 @@ def html_form():
 
 def html_list():
     return template("""
+        <% from db import WAIT, WORK, FAIL, DONE %>
         %if urls:
         <table border=1>
         <thead><tr>
@@ -53,8 +56,14 @@ def html_list():
                 <td>{{url.updt}}</td>
                 <td>{{url.url}}</td>
                 <td>\\\\
-                    %if url.flag is None:
-"""                  """NA\\\\
+                    %if url.flag is None or url.flag == WAIT:
+"""                  """<a href=/rest?mid={{url.rowid}}&act=start>start</a>\\\\
+                    %elif url.flag == WORK:
+"""                  """working\\\\
+                    %elif url.flag == FAIL:
+"""                  """<a href=/rest?mid={{url.rowid}}&act=start>retry</a>\\\\
+                    %elif url.flag == DONE:
+"""                  """<a href=/movies/{{url.rowid}}>Done</a>\\\\
                     %else:
 """                  """FF\\\\
                     %end
@@ -69,6 +78,24 @@ def html_list():
 
 def conv(src):
     return [ord(x) for x in src]
+
+
+@route('/movies/<mid>')
+def server_static(mid):
+    return static_file(filename, root='/path/to/your/static/files')
+
+
+@get('/rest')
+def rest():
+    mid = request.query.mid
+    act = request.query.act
+    print("rest: mid=%s, act=%s" % (mid, act))
+    if act in ("start",):
+        set_flag(mid, act)
+    #body = template('rest: mid = {{mid}}<br>act = {{act}}',
+    #                mid=mid, act=act)
+    #return html_head() + body + html_foot()
+    redirect("/")
 
 
 @get('/<:re:.*>')

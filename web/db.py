@@ -5,6 +5,10 @@ import sqlite3
 
 
 dbfile = "url_info.db"
+WAIT=10
+WORK=20
+FAIL=30
+DONE=50
 
 
 class SDB(object):
@@ -63,6 +67,15 @@ def query_urls():
         ret = [UOBJ(zip(desc, url)) for url in urls]
     return ret
 
+
+def set_flag(mid, act):
+    fm = {"start": WORK}
+    if act not in fm:
+        return
+    with SDB() as c:
+        c.execute("update aviurl set flag=? where rowid=?",
+                  (fm[act], mid))
+        
 
 def dump_urls():
     for uobj in query_urls():
