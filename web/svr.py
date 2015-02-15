@@ -56,8 +56,10 @@ def html_list():
                 <td>{{url.updt}}</td>
                 <td>{{url.url}}</td>
                 <td>\\\\
-                    %if url.flag is None or url.flag == WAIT:
+                    %if url.flag is None or url.flag == STOP:
 """                  """<a href=/rest?mid={{url.rowid}}&act=start>start</a>\\\\
+                    %elif url.flag == WAIT:
+"""                  """waiting\\\\
                     %elif url.flag == WORK:
 """                  """working\\\\
                     %elif url.flag == FAIL:
@@ -92,9 +94,6 @@ def rest():
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
         set_flag(mid, act)
-    #body = template('rest: mid = {{mid}}<br>act = {{act}}',
-    #                mid=mid, act=act)
-    #return html_head() + body + html_foot()
     redirect("/")
 
 

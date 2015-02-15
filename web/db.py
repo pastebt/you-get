@@ -5,6 +5,7 @@ import sqlite3
 
 
 dbfile = "url_info.db"
+STOP = 0
 WAIT = 10
 WORK = 20
 FAIL = 30
@@ -53,9 +54,9 @@ class UOBJ(object):
 
 def add_one_url(url, title=""):
     with SDB() as c:
-        c.execute("insert into aviurl (url, name, updt) "
-                  "values (?, ?, datetime('now', 'localtime'))",
-                  (url, title))
+        c.execute("insert into aviurl (url, name, updt, flag) "
+                  "values (?, ?, datetime('now', 'localtime'), ?)",
+                  (url, title, STOP))
 
 
 def query_urls():
@@ -66,6 +67,15 @@ def query_urls():
         #ret = [dict(zip(desc, url)) for url in urls]
         ret = [UOBJ(zip(desc, url)) for url in urls]
     return ret
+
+
+def pick_url():
+    with SDB() as c:
+        dats = c.execute("select rowid, * from aviurl where flag=? limit 1",
+                         (WAIT,))
+        desc = [x[0] for x in c.description]
+        uobj = UOBJ(zip(desc, dats[0]) if dats else None
+    return uobj
 
 
 def set_flag(mid, act):

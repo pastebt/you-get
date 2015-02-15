@@ -19,33 +19,38 @@ from you_get.common import any_download, download_main
 from db import pick_url
 
 
-def work():
-    url = "http://www.dailymotion.com/video/k65xg3tOFvWf7a9CtyR"
-    url = "http://www.dailymotion.com/video/k24yMzJwTk5oW29DIrD"
-    url = "http://www.dailymotion.com/video/koWwt2hrjlB7S89Io00"
-    #download_main(any_download, None, [url], None,
-    #          output_dir="/home/maye/workspace/github/you-get/")
+def work(uobj):
+    #url = "http://www.dailymotion.com/video/k65xg3tOFvWf7a9CtyR"
+    #url = "http://www.dailymotion.com/video/k24yMzJwTk5oW29DIrD"
+    #url = "http://www.dailymotion.com/video/koWwt2hrjlB7S89Io00"
+    download_main(any_download, None, [uobj.url], None,
+              output_dir="/home/maye/workspace/github/you-get/")
 
 
-class Worker(object):
+class Worker(Process):
     def __init__(self, que):
-        self.reader, sender = Pipe(False)
-        self.proc = Process(target=self.run, args=[que, sender])
+        Process.__init__(self)
+        self.que = que
+        self.reader, self.sender = Pipe(False)
+        #self.proc = Process(target=self.run, args=[que, sender])
 
-    def run(self, que, sender):
-        que.get()
-        url = pick_url()
-        work()
+    def run(self):
+        while self.que.get():
+            uobj = pick_url()
+            work(uobj)
 
 
-class Manager(object):
-    def __init__(self, que, wnum=2):
+class Manager(Process):
+    def __init__(self, que, wnum=1):
+        Process.__init__(self)
         self.works = [0] * wnum
         self.que = que
         self.running = True
         for i in range(wnum):
             self.works[i] = Worker(self.que)
+            self.works[i].start()
 
     def run(self):
         while self.running:
-            select(self.works.reader.fileno)
+            #select(self.works.reader.fileno)
+            dat = self.works[0].reader.read()
