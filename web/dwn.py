@@ -2,7 +2,9 @@
 
 import os
 import sys
+import select
 from multiprocessing import Pipe, Queue, Process
+
 
 _srcdir = '../src/'
 if getattr(sys, 'frozen', False):
@@ -31,11 +33,8 @@ class WFP(object):
 
 
 def work(uobj):
-    #url = "http://www.dailymotion.com/video/k65xg3tOFvWf7a9CtyR"
-    #url = "http://www.dailymotion.com/video/k24yMzJwTk5oW29DIrD"
-    #url = "http://www.dailymotion.com/video/koWwt2hrjlB7S89Io00"
     download_main(any_download, None, [uobj.url], None,
-              output_dir="/home/maye/workspace/github/you-get/")
+                  output_dir="../")
 
 
 class Worker(Process):
@@ -44,6 +43,9 @@ class Worker(Process):
         self.que = que
         self.mod = None
         self.reader, self.sender = Pipe(False)
+
+    def fileno(self):   # help for select
+        return self.reader.fileno()
 
     def run(self):
         sys.stdout = WFP(self.sender)
@@ -62,15 +64,13 @@ class Worker(Process):
 
 
 class Manager(Process):
-    def __init__(self, wnum=1):
+    def __init__(self, wnum=2):
         Process.__init__(self)
         self.m2w = self.s2m = Queue()
-        self.wnum = wnum
-
-        self.works = [0] * self.wnum
-        for i in range(self.wnum):
+        self.works = [0] * wnum
+        for i in range(wnum):
             self.works[i] = Worker(self.m2w)
-        self.works[0].start()
+            self.works[i].start()
 
     """
 Video Site: bilibili.com
@@ -84,19 +84,23 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
     def run(self):
         while True:
             #select(self.works.reader.fileno)
-            self.handle_worker(self.works[0])
+            #self.handle_worker(self.works[0])
+            rl, wl, xl = select.select(self.works, [], [], 5)
+            for wk in rl:
+                self.handle_worker(wk)
 
     def handle_worker(self, wk):
-        dat = wk.reader.recv()
-        print("[" + dat + "]")
-        if dat.startswith("Process ") and "mid" in dat:
-            dd = dat.split()
-            mid = dd[1][4:]
-            act = dd[2].lower()
-            set_flag(mid, act)
-            wk.mid = mid if act == 'start' else None
-        elif dat.startswith("Downloading "):
-            print(dat)
-            print("mid=[%s]" % wk.mid)
-            if wk.mid is not None:
-                update_filename(wk.mid, dat[12:-4])
+        dats = wk.reader.recv()
+        for dat in dats.split('\n'):
+            print("[" + dat + "]")
+            if dat.startswith("Process ") and "mid" in dat:
+                dd = dat.split()
+                mid = dd[1][4:]
+                act = dd[2].lower()
+                set_flag(mid, act)
+                wk.mid = mid if act == 'start' else None
+            elif dat.startswith("Downloading "):
+                print(dat)
+                print("mid=[%s]" % wk.mid)
+                if wk.mid is not None:
+                    update_filename(wk.mid, dat[12:-4])

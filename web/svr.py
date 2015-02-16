@@ -5,6 +5,7 @@ from bottle import run, template, route, redirect
 from bottle import static_file
 
 from db import init_db, add_one_url, query_urls, set_flag
+from db import pick_url
 from dwn import Manager
 
 
@@ -85,7 +86,8 @@ def conv(src):
 
 @route('/movies/<mid>')
 def server_static(mid):
-    return static_file(filename, root='/path/to/your/static/files')
+    uobj = pick_url(mid)
+    return static_file(uobj.path, root='../')
 
 
 @get('/rest')
