@@ -83,12 +83,18 @@ def pick_url(mid=0):
 
 
 def set_flag(mid, act):
-    fm = {"start": WORK}
+    fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
     if act not in fm:
         return
     with SDB() as c:
         c.execute("update aviurl set flag=? where rowid=?",
                   (fm[act], mid))
+
+
+def update_filename(mid, fn):
+    with SDB() as c:
+        urls = c.execute("update aviurl set path=? where rowid=?",
+                         (fn, mid))
 
 
 def dump_urls():

@@ -60,7 +60,7 @@ def html_list():
                     %if url.flag is None or url.flag == STOP:
 """                  """<a href=/rest?mid={{url.rowid}}&act=start>start</a>\\\\
                     %elif url.flag == WAIT:
-"""                  """waiting\\\\
+"""                  """<a href=/rest?mid={{url.rowid}}&act=start>waiting</a>\\\\
                     %elif url.flag == WORK:
 """                  """<a href=/rest?mid={{url.rowid}}&act=start>working</a>\\\\
                     %elif url.flag == FAIL:
@@ -94,7 +94,7 @@ def rest():
     act = request.query.act
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
-        set_flag(mid, act)
+        set_flag(mid, "wait")
         mon.s2m.put(mid)
     redirect("/")
 

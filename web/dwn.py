@@ -16,7 +16,7 @@ sys.path.insert(1, os.path.join(_filepath, _srcdir))
 
 
 from you_get.common import any_download, download_main
-from db import pick_url
+from db import pick_url, update_filename, set_flag
 
 
 class WFP(object):
@@ -42,6 +42,7 @@ class Worker(Process):
     def __init__(self, que):
         Process.__init__(self)
         self.que = que
+        self.mod = None
         self.reader, self.sender = Pipe(False)
 
     def run(self):
@@ -52,8 +53,12 @@ class Worker(Process):
                 break
             uobj = pick_url(mid)
             self.sender.send("Process mid=%d Start" % uobj.rowid)
-            work(uobj)
-            self.sender.send("Process mid=%d Stop" % uobj.rowid)
+            try:
+                work(uobj)
+            except:
+                self.sender.send("Process mid=%d Fail" % uobj.rowid)
+            else:
+                self.sender.send("Process mid=%d Stop" % uobj.rowid)
 
 
 class Manager(Process):
@@ -79,7 +84,19 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
     def run(self):
         while True:
             #select(self.works.reader.fileno)
-            dat = self.works[0].reader.recv()
-            print("[" + dat + "]")
-            if dat.startswith("Downloading ") or dat.startswith("Process "):
-                print(dat)
+            self.handle_worker(self.works[0])
+
+    def handle_worker(self, wk):
+        dat = wk.reader.recv()
+        print("[" + dat + "]")
+        if dat.startswith("Process ") and "mid" in dat:
+            dd = dat.split()
+            mid = dd[1][4:]
+            act = dd[2].lower()
+            set_flag(mid, act)
+            wk.mid = mid if act == 'start' else None
+        elif dat.startswith("Downloading "):
+            print(dat)
+            print("mid=[%s]" % wk.mid)
+            if wk.mid is not None:
+                update_filename(wk.mid, dat[12:-4])
