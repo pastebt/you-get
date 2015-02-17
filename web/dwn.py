@@ -22,11 +22,52 @@ from db import pick_url, update_filename, set_flag
 
 
 class WFP(object):
-    def __init__(self, p):
-        self.p = p
+    def __init__(self, who, out, mid=0):
+        self.out = out
+        self.mid = mid
+        self.left = ""
+        self.who = who
 
     def write(self, dat):
-        self.p.send(dat)
+        self.left = self.left + dat
+        if self.left[-1] in '\r\n' or len(self.left) > 200:
+            self.out.put({"who": self.who, "mid": self.mid, "dat": self.left})
+            self.left = ""
+
+    def write2(self, dat):
+        dat = self.left + dat
+        sep = "\n"
+        dats = dat.split(sep)
+        if len(dats) == 1:
+            sep = "\r"
+            dats = dat.split(sep)
+        if len(dats) > 1:
+            dats, self.left = dats[:-1], dats[-1]
+            for dat in dats:
+                self.out.put({"who": self.who, "mid": self.mid, "dat": dat})
+        else:
+            self.left = dat
+        if len(self.left) > 200:
+            self.out.put({"who": self.who, "mid": self.mid, "dat": self.left})
+            self.left = ""
+
+    def write1(self, dat):
+        try:
+            i = dat.index('\n')
+        except:
+            try:
+                i = dat.index('\r')
+            except:
+                i = -1
+        if i == -1:
+            self.left = self.left + dat
+            if len(dat) > 200:
+                dat, self.left = self.left, ""
+        else:
+            i = i + 1
+            dat, self.left = self.left + dat[:i], dat[i:]
+        if dat:
+            self.out.put({"who": self.who, "mid": self.mid, "dat": dat})
 
     def flush(self):
         pass
@@ -38,38 +79,35 @@ def work(uobj):
 
 
 class Worker(Process):
-    def __init__(self, que):
+    def __init__(self, s2m, m2w):
         Process.__init__(self)
-        self.que = que
-        self.mod = None
-        self.reader, self.sender = Pipe(False)
-
-    def fileno(self):   # help for select
-        return self.reader.fileno()
+        self.s2m, self.m2w = s2m, m2w
 
     def run(self):
-        sys.stdout = WFP(self.sender)
         while True:
-            mid = self.que.get()
+            mid = self.m2w.get()
             if mid is None:
                 break
+            sys.stdout = WFP("worker", self.s2m, mid)
+            sys.stderr = WFP("error", self.s2m, mid)
             uobj = pick_url(mid)
-            self.sender.send("Process mid=%d Start" % uobj.rowid)
+            print("Process mid=%d Start" % uobj.rowid)
             try:
                 work(uobj)
             except:
-                self.sender.send("Process mid=%d Fail" % uobj.rowid)
+                print("Process mid=%d Fail" % uobj.rowid)
             else:
-                self.sender.send("Process mid=%d Stop" % uobj.rowid)
+                print("Process mid=%d Stop" % uobj.rowid)
 
 
 class Manager(Process):
     def __init__(self, wnum=2):
         Process.__init__(self)
-        self.m2w = self.s2m = Queue()
+        self.s2m = Queue()  # message Manager receive from worker and svr
+        self.m2w = Queue()  # message send to works
         self.works = [0] * wnum
         for i in range(wnum):
-            self.works[i] = Worker(self.m2w)
+            self.works[i] = Worker(self.s2m, self.m2w)
             self.works[i].start()
 
     """
@@ -83,24 +121,41 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
     """
     def run(self):
         while True:
-            #select(self.works.reader.fileno)
-            #self.handle_worker(self.works[0])
-            rl, wl, xl = select.select(self.works, [], [], 5)
-            for wk in rl:
-                self.handle_worker(wk)
+            msg = self.s2m.get()
+            who = msg.get('who')
+            if who == 'worker':
+                self.handle_mid(msg['mid'], msg['dat'])
+            elif who == 'svr':
+                self.m2w.put(msg['mid'])
+            elif who == 'error':
+                sys.stderr.write(msg['dat'])   # FIXME
+                sys.stderr.write("\n")
+            else:
+                sys.stderr.write("Unknow msg:\n")
+                sys.stderr.write(msg)
+                sys.stderr.write("\n")
 
-    def handle_worker(self, wk):
-        dats = wk.reader.recv()
-        for dat in dats.split('\n'):
-            print("[" + dat + "]")
-            if dat.startswith("Process ") and "mid" in dat:
-                dd = dat.split()
-                mid = dd[1][4:]
-                act = dd[2].lower()
-                set_flag(mid, act)
-                wk.mid = mid if act == 'start' else None
-            elif dat.startswith("Downloading "):
-                print(dat)
-                print("mid=[%s]" % wk.mid)
-                if wk.mid is not None:
-                    update_filename(wk.mid, dat[12:-4])
+    def handle_mid(self, mid, dat):
+        print(dat)
+        if dat.startswith("Process "):
+            dd = dat.split()
+            act = dd[2].lower()
+            print("mid=%s, act=%s" % (mid, act))
+            set_flag(mid, act)
+        elif dat.startswith("Downloading "):
+            print("mid=[%s]" % mid)
+            update_filename(mid, dat[12:-4])
+
+    #def handle_worker(self, wk, dat):
+    #    print("[" + dat + "]")
+    #    if dat.startswith("Process ") and "mid" in dat:
+    #        dd = dat.split()
+    #        mid = dd[1][4:]
+    #        act = dd[2].lower()
+    #        set_flag(mid, act)
+    #        wk.mid = mid if act == 'start' else None
+    #    elif dat.startswith("Downloading "):
+    #        print(dat)
+    #        print("mid=[%s]" % wk.mid)
+    #        if wk.mid is not None:
+    #            update_filename(wk.mid, dat[12:-4])

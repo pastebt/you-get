@@ -32,6 +32,8 @@ def init_db():
             url text,           -- movie url
             name text,          -- movie name
             mime text,          -- mime from remote
+            opts text,          -- options for download, json
+            errs text,          -- errors during download, logexc
             size bigint,        -- movie file size
             path text,          -- movie local file path
             updt datetime,      -- when the url be submitted

@@ -97,7 +97,8 @@ def rest():
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
         set_flag(mid, "wait")
-        mon.s2m.put(mid)
+        #mon.s2m.put({"who": "svr", "mid": mid})
+        mon.m2w.put(mid)
     redirect("/")
 
 
