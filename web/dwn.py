@@ -34,41 +34,6 @@ class WFP(object):
             self.out.put({"who": self.who, "mid": self.mid, "dat": self.left})
             self.left = ""
 
-    def write2(self, dat):
-        dat = self.left + dat
-        sep = "\n"
-        dats = dat.split(sep)
-        if len(dats) == 1:
-            sep = "\r"
-            dats = dat.split(sep)
-        if len(dats) > 1:
-            dats, self.left = dats[:-1], dats[-1]
-            for dat in dats:
-                self.out.put({"who": self.who, "mid": self.mid, "dat": dat})
-        else:
-            self.left = dat
-        if len(self.left) > 200:
-            self.out.put({"who": self.who, "mid": self.mid, "dat": self.left})
-            self.left = ""
-
-    def write1(self, dat):
-        try:
-            i = dat.index('\n')
-        except:
-            try:
-                i = dat.index('\r')
-            except:
-                i = -1
-        if i == -1:
-            self.left = self.left + dat
-            if len(dat) > 200:
-                dat, self.left = self.left, ""
-        else:
-            i = i + 1
-            dat, self.left = self.left + dat[:i], dat[i:]
-        if dat:
-            self.out.put({"who": self.who, "mid": self.mid, "dat": dat})
-
     def flush(self):
         pass
 
@@ -145,17 +110,3 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
         elif dat.startswith("Downloading "):
             print("mid=[%s]" % mid)
             update_filename(mid, dat[12:-4])
-
-    #def handle_worker(self, wk, dat):
-    #    print("[" + dat + "]")
-    #    if dat.startswith("Process ") and "mid" in dat:
-    #        dd = dat.split()
-    #        mid = dd[1][4:]
-    #        act = dd[2].lower()
-    #        set_flag(mid, act)
-    #        wk.mid = mid if act == 'start' else None
-    #    elif dat.startswith("Downloading "):
-    #        print(dat)
-    #        print("mid=[%s]" % wk.mid)
-    #        if wk.mid is not None:
-    #            update_filename(wk.mid, dat[12:-4])
