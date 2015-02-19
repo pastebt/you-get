@@ -59,15 +59,15 @@ def html_list():
                 <td>{{url.url}}</td>
                 <td>\\\\
                     %if url.flag is None or url.flag == STOP:
-"""                  """<a href=/rest?mid={{url.rowid}}&act=start>start</a>\\\\
+"""                  """<a href=/rest?mid={{url.mid}}&act=start>start</a>\\\\
                     %elif url.flag == WAIT:
-"""                  """<a href=/rest?mid={{url.rowid}}&act=start>waiting</a>\\\\
+"""                  """<a href=/rest?mid={{url.mid}}&act=start>waiting</a>\\\\
                     %elif url.flag == WORK:
-"""                  """<a href=/rest?mid={{url.rowid}}&act=start>working</a>\\\\
+"""                  """<a href=/rest?mid={{url.mid}}&act=start>working</a>\\\\
                     %elif url.flag == FAIL:
-"""                  """<a href=/rest?mid={{url.rowid}}&act=start>retry</a>\\\\
+"""                  """<a href=/rest?mid={{url.mid}}&act=start>retry</a>\\\\
                     %elif url.flag == DONE:
-"""                  """<a href=/movies/{{url.rowid}}>Done</a>\\\\
+"""                  """<a href=/movies/{{url.mid}}>Done</a>\\\\
                     %else:
 """                  """FF\\\\
                     %end
@@ -97,8 +97,8 @@ def rest():
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
         set_flag(mid, "wait")
-        #mon.s2m.put({"who": "svr", "mid": mid})
-        mon.m2w.put(mid)
+        mon.s2m.put({"who": "svr", "mid": mid})
+        #mon.m2w.put(mid)
     redirect("/")
 
 

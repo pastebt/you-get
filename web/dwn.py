@@ -18,7 +18,8 @@ sys.path.insert(1, os.path.join(_filepath, _srcdir))
 
 
 from you_get.common import any_download, download_main
-from db import pick_url, update_filename, set_flag
+from db import pick_url, update_filename, set_flag, get_by_flag
+from db import WORK, WAIT, STOP
 
 
 class WFP(object):
@@ -50,23 +51,26 @@ class Worker(Process):
 
     def run(self):
         while True:
-            mid = self.m2w.get()
-            if mid is None:
+            uobj = self.m2w.get()
+            if uobj is None:
                 break
-            sys.stdout = WFP("worker", self.s2m, mid)
-            sys.stderr = WFP("error", self.s2m, mid)
-            uobj = pick_url(mid)
-            print("Process mid=%d Start" % uobj.rowid)
+            sys.stdout = WFP("worker", self.s2m, uobj.mid)
+            sys.stderr = WFP("error", self.s2m, uobj.mid)
+            #uobj = pick_url(mid)
+            #if not uobj:
+            #    print("Nothing to Start, mid=%s" % mid)
+            #    continue
+            print("Process mid=%d Start" % uobj.mid)
             try:
                 work(uobj)
             except:
-                print("Process mid=%d Fail" % uobj.rowid)
+                print("Process mid=%d Fail" % uobj.mid)
             else:
-                print("Process mid=%d Stop" % uobj.rowid)
+                print("Process mid=%d Stop" % uobj.mid)
 
 
 class Manager(Process):
-    def __init__(self, wnum=2):
+    def __init__(self, wnum=3):
         Process.__init__(self)
         self.s2m = Queue()  # message Manager receive from worker and svr
         self.m2w = Queue()  # message send to works
@@ -85,13 +89,23 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
   0.7% ( 22.2/3410.9MB) [#
     """
     def run(self):
+        # reset DB flags
+        kuos = get_by_flag(WORK)
+        for uo in kuos:
+            set_flag(uo.mid, STOP)
+        tuos = get_by_flag(WAIT)
+        for uo in tuos:
+            set_flag(uo.mid, STOP)
+
+
         while True:
             msg = self.s2m.get()
             who = msg.get('who')
             if who == 'worker':
                 self.handle_mid(msg['mid'], msg['dat'])
             elif who == 'svr':
-                self.m2w.put(msg['mid'])
+                #self.m2w.put(msg['mid'])
+                self.m2w.put(pick_url(msg['mid']))
             elif who == 'error':
                 sys.stderr.write(msg['dat'])   # FIXME
                 sys.stderr.write("\n")

@@ -61,9 +61,9 @@ def add_one_url(url, title=""):
                   (url, title, STOP))
 
 
-def query_urls():
+def query_select(q, p=()):
     with SDB() as c:
-        urls = c.execute("select rowid, * from aviurl")
+        urls = c.execute(q, p)
         desc = [x[0] for x in c.description]
         # have to finish this in "with" scope
         #ret = [dict(zip(desc, url)) for url in urls]
@@ -71,26 +71,40 @@ def query_urls():
     return ret
 
 
+def query_urls():
+    return query_select("select rowid as mid, * from aviurl")
+
+
 def pick_url(mid=0):
-    with SDB() as c:
-        if mid:
-            urls = c.execute("select rowid, * from aviurl where rowid=?",
-                             (mid,))
-        else:
-            urls = c.execute("select rowid, * from aviurl where flag=? limit 1",
-                             (WAIT,))
-        desc = [x[0] for x in c.description]
-        ret = [UOBJ(zip(desc, url)) for url in urls]
+    #with SDB() as c:
+    #    if mid:
+    #        urls = c.execute("select rowid, * from aviurl where rowid=?",
+    #                         (mid,))
+    #    else:
+    #        urls = c.execute("select rowid, * from aviurl where flag=? limit 1",
+    #                         (WAIT,))
+    #    desc = [x[0] for x in c.description]
+    #    ret = [UOBJ(zip(desc, url)) for url in urls]
+    if mid:
+        ret = query_select("select rowid as mid, * from aviurl where rowid=?",
+                           (mid,))
+    else:
+        ret = qieru_select("select rowid as mid, * from aviurl where flag=? limit 1",
+                           (WAIT,))
     return ret[0] if ret else None
 
 
+def get_by_flag(f):
+    return query_select("select rowid as mid, * from aviurl where flag=?", (f,))
+    
+
 def set_flag(mid, act):
     fm = {"wait": WAIT, "start": WORK, "fail": FAIL, "stop": DONE}
-    if act not in fm:
-        return
+    #if act not in fm:
+    #    return
     with SDB() as c:
         c.execute("update aviurl set flag=? where rowid=?",
-                  (fm[act], mid))
+                  (fm.get(act, act), mid))
 
 
 def update_filename(mid, fn):
