@@ -4,7 +4,6 @@ import sys
 import sqlite3
 
 
-dbfile = "url_info.db"
 STOP = 0
 WAIT = 10
 WORK = 20
@@ -13,9 +12,9 @@ DONE = 50
 
 
 class SDB(object):
+    dbfile = "url_info.db"
     def __enter__(self):
-        global dbfile
-        self.conn = sqlite3.connect(dbfile)
+        self.conn = sqlite3.connect(self.dbfile)
         self.cur = self.conn.cursor()
         return self.cur
 
@@ -120,16 +119,18 @@ def dump_urls():
 
 def usage():
     print('URL DB utility')
-    print('Usage:', sys.argv[0], "-l")
+    print('Usage:', sys.argv[0], "-l [dbfile]")
     print('    -l  list all url in DB')
     sys.exit(1)
 
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3):
         usage()
 
     if sys.argv[1] == '-l':
+        if len(sys.argv) == 3:
+            SDB.dbfile = sys.argv[2]
         dump_urls()
     else:
         usage()

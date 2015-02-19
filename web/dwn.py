@@ -3,6 +3,7 @@
 import os
 import sys
 import select
+import traceback
 from multiprocessing import Pipe, Queue, Process
 
 
@@ -41,7 +42,7 @@ class WFP(object):
 
 def work(uobj):
     download_main(any_download, None, [uobj.url], None,
-                  output_dir="../")
+                  output_dir="../", merge=False, info_only=False)
 
 
 class Worker(Process):
@@ -64,7 +65,9 @@ class Worker(Process):
             try:
                 work(uobj)
             except:
-                print("Process mid=%d Fail" % uobj.mid)
+                t, l, tb = sys.exc_info()
+                msg = "".join(traceback.format_exception(t, l, tb))
+                print("Process mid=%d Fail\n%s" % (uobj.mid, msg))
             else:
                 print("Process mid=%d Stop" % uobj.mid)
 
@@ -78,6 +81,10 @@ class Manager(Process):
         for i in range(wnum):
             self.works[i] = Worker(self.s2m, self.m2w)
             self.works[i].start()
+
+    def stop(self):
+        for w in self.works:
+            self.m2w.put(None)      # FIXME should call worker.Terminal?
 
     """
 Video Site: bilibili.com
@@ -123,4 +130,4 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
             set_flag(mid, act)
         elif dat.startswith("Downloading "):
             print("mid=[%s]" % mid)
-            update_filename(mid, dat[12:-4])
+            update_filename(mid, dat[12:-5])

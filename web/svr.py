@@ -1,8 +1,12 @@
 #! /usr/bin/python3
 
+from bottle import WSGIRefServer
 from bottle import get, post, request
 from bottle import run, template, route, redirect
 from bottle import static_file
+
+from socketserver import ForkingMixIn
+from wsgiref.simple_server import WSGIServer
 
 from db import init_db, add_one_url, query_urls, set_flag
 from db import pick_url
@@ -87,7 +91,8 @@ def conv(src):
 @route('/movies/<mid>')
 def server_static(mid):
     uobj = pick_url(mid)
-    return static_file(uobj.path, root='../')
+    if uobj:
+        return static_file(uobj.path, root='../')
 
 
 @get('/rest')
@@ -98,7 +103,6 @@ def rest():
     if act in ("start",):
         set_flag(mid, "wait")
         mon.s2m.put({"who": "svr", "mid": mid})
-        #mon.m2w.put(mid)
     redirect("/")
 
 
@@ -114,18 +118,23 @@ def do_post():
     avitil = bytearray(conv(rtitle)).decode("utf8")
 
     add_one_url(aviurl, avitil)
-    #fout = open("url_post.txt", "a")
-    #fout.write(aviurl + "\n")
-    #fout.close()
     body = template('Got:<br>Title: {{title}}<br>URL:{{url}}',
                     title=avitil, url=aviurl)
     return html_head() + body + html_form() + html_list() + html_foot()
 
 
+class FWSGISvr(ForkingMixIn, WSGIServer):
+    pass
+
+
+class MySvr(WSGIRefServer):
+    def __init__(self, host='127.0.0.1', port=8080, **options):
+        options['server_class']=FWSGISvr
+        WSGIRefServer.__init__(self, host, port, **options) 
+
+
 init_db()
 mon = Manager()
 mon.start()
-#mon.s2m.put(1)   start 
-#run(host='localhost', port=8080)
-run(host='', port=8080)
-mon.s2m.put(None)
+run(server=MySvr, host='', port=8080)
+mon.stop()
