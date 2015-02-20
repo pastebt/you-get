@@ -5,7 +5,7 @@ from bottle import get, post, request
 from bottle import run, template, route, redirect
 from bottle import static_file
 
-from socketserver import ForkingMixIn
+from socketserver import ForkingMixIn, ThreadingMixIn
 from wsgiref.simple_server import WSGIServer
 
 from db import init_db, add_one_url, query_urls, set_flag
@@ -102,7 +102,8 @@ def rest():
     print("rest: mid=%s, act=%s" % (mid, act))
     if act in ("start",):
         set_flag(mid, "wait")
-        mon.s2m.put({"who": "svr", "mid": mid})
+        #mon.s2m.put({"who": "svr", "mid": mid})
+        s2m.put({"who": "svr", "mid": mid})
     redirect("/")
 
 
@@ -123,18 +124,21 @@ def do_post():
     return html_head() + body + html_form() + html_list() + html_foot()
 
 
-class FWSGISvr(ForkingMixIn, WSGIServer):
+#class FWSGISvr(ForkingMixIn, WSGIServer):
+class FWSGISvr(ThreadingMixIn, WSGIServer):
     pass
 
 
 class MySvr(WSGIRefServer):
-    def __init__(self, host='127.0.0.1', port=8080, **options):
+    def __init__(self, host='', port=8080, **options):
         options['server_class']=FWSGISvr
         WSGIRefServer.__init__(self, host, port, **options) 
 
 
 init_db()
 mon = Manager()
+s2m = mon.s2m
 mon.start()
-run(server=MySvr, host='', port=8080)
+run(server=MySvr)
+#run(host='', port=8080)
 mon.stop()

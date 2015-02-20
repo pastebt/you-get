@@ -104,9 +104,9 @@ Downloading 【BD‧1080P】【高分剧情】鸟人-飞鸟侠 2014【中文字�
         for uo in tuos:
             set_flag(uo.mid, STOP)
 
-
         while True:
             msg = self.s2m.get()
+            #print("pid=%s, self.s2m.get=%s" % (os.getpid(), repr(msg)))
             who = msg.get('who')
             if who == 'worker':
                 self.handle_mid(msg['mid'], msg['dat'])
