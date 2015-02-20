@@ -139,6 +139,6 @@ init_db()
 mon = Manager()
 s2m = mon.s2m
 mon.start()
-run(server=MySvr)
+run(server=MySvr, host='')
 #run(host='', port=8080)
 mon.stop()
