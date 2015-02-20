@@ -131,8 +131,8 @@ class FWSGISvr(ThreadingMixIn, WSGIServer):
 
 class MySvr(WSGIRefServer):
     def __init__(self, host='', port=8080, **options):
-        options['server_class']=FWSGISvr
-        WSGIRefServer.__init__(self, host, port, **options) 
+        options['server_class'] = FWSGISvr
+        WSGIRefServer.__init__(self, host, port, **options)
 
 
 init_db()
